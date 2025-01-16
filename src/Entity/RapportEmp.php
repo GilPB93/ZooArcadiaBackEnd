@@ -22,6 +22,14 @@ class RapportEmp
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\OneToOne(inversedBy: 'rapportEmp', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $createdBy = null;
+
+    #[ORM\ManyToOne(inversedBy: 'rapportEmp')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Animal $animal = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -59,6 +67,30 @@ class RapportEmp
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getCreatedBy(): ?User
+    {
+        return $this->createdBy;
+    }
+
+    public function setCreatedBy(User $createdBy): static
+    {
+        $this->createdBy = $createdBy;
+
+        return $this;
+    }
+
+    public function getAnimal(): ?Animal
+    {
+        return $this->animal;
+    }
+
+    public function setAnimal(?Animal $animal): static
+    {
+        $this->animal = $animal;
 
         return $this;
     }

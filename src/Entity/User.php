@@ -40,8 +40,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255)]
     private ?string $apiToken = null;
 
+    /** @throws RandomException */
+    public function __construct()
+    {
+        $this->apiToken = bin2hex(random_bytes(20));
+    }
+
+
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\OneToOne(mappedBy: 'createdBy', cascade: ['persist', 'remove'])]
+    private ?RapportEmp $rapportEmp = null;
+
+    #[ORM\OneToOne(mappedBy: 'createdBy', cascade: ['persist', 'remove'])]
+    private ?RapportVet $rapportVet = null;
 
     public function getId(): ?int
     {
@@ -194,6 +207,40 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getRapportEmp(): ?RapportEmp
+    {
+        return $this->rapportEmp;
+    }
+
+    public function setRapportEmp(RapportEmp $rapportEmp): static
+    {
+        // set the owning side of the relation if necessary
+        if ($rapportEmp->getCreatedBy() !== $this) {
+            $rapportEmp->setCreatedBy($this);
+        }
+
+        $this->rapportEmp = $rapportEmp;
+
+        return $this;
+    }
+
+    public function getRapportVet(): ?RapportVet
+    {
+        return $this->rapportVet;
+    }
+
+    public function setRapportVet(RapportVet $rapportVet): static
+    {
+        // set the owning side of the relation if necessary
+        if ($rapportVet->getCreatedBy() !== $this) {
+            $rapportVet->setCreatedBy($this);
+        }
+
+        $this->rapportVet = $rapportVet;
 
         return $this;
     }

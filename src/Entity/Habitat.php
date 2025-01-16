@@ -23,6 +23,9 @@ class Habitat
     #[ORM\Column(length: 255)]
     private ?string $habitatImg = null;
 
+    #[ORM\OneToOne(mappedBy: 'habitat', cascade: ['persist', 'remove'])]
+    private ?Animal $animal = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -60,6 +63,23 @@ class Habitat
     public function setHabitatImg(string $habitatImg): static
     {
         $this->habitatImg = $habitatImg;
+
+        return $this;
+    }
+
+    public function getAnimal(): ?Animal
+    {
+        return $this->animal;
+    }
+
+    public function setAnimal(Animal $animal): static
+    {
+        // set the owning side of the relation if necessary
+        if ($animal->getHabitat() !== $this) {
+            $animal->setHabitat($this);
+        }
+
+        $this->animal = $animal;
 
         return $this;
     }
