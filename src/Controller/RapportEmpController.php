@@ -31,7 +31,7 @@ class RapportEmpController extends AbstractController
 
     //CREATE RAPPORTEMP - POST
     #[Route(name: 'new', methods: ['POST'])]
-    #[IsGranted('ROLE_EMPLOYE')]
+    #[IsGranted('ROLE_USER')]
     #[OA\Post(
         path: '/api/rapportEmp',
         summary: 'Create a new Rapport Employé',
@@ -96,7 +96,6 @@ class RapportEmpController extends AbstractController
             $rapportEmp,
             Response::HTTP_CREATED,
             ['location' => $this->urlGenerator->generate('app_api_rapportEmp_read', ['id' => $rapportEmp->getId()])],
-            context: ['groups' => ['rapportEmp:read']] // Utilise les groupes de sérialisation si configuré
         );
     }
 
@@ -104,6 +103,7 @@ class RapportEmpController extends AbstractController
 
     //READ RAPPORTEMP - GET
     #[Route('/{id}', name: 'read', methods: ['GET'])]
+    #[isGranted('ROLE_ADMIN, ROLE_VETERINAIRE')]
     #[OA\Get(
         path: '/api/rapportEmp/{id}',
         summary: 'Get a Rapport Employé by its ID',

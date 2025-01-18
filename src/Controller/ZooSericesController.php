@@ -214,7 +214,6 @@ class ZooSericesController extends AbstractController
             )
         ]
     )]
-
     public function delete(int $id) : JsonResponse
     {
         $zooServices = $this->repository->findOneBy(['id' => $id]);
