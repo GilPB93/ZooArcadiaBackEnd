@@ -18,11 +18,9 @@ security:
             provider: app_user_provider
             stateless: true
             custom_authenticator: App\Security\ApiTokenAuthenticator
-
             json_login:
                 check_path: app_api_login
                 username_path: email
-
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -32,11 +30,18 @@ security:
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
+    role_hierarchy:
+        ROLE_ADMIN: [ ROLE_VETERINAIRE, ROLE_EMPLOYE, ROLE_USER ]
+        ROLE_VETERINAIRE: [ ROLE_USER ]
+        ROLE_EMPLOYE: [ ROLE_USER ]
+
+
     access_control:
         - { path : ^/api/login, roles : PUBLIC_ACCESS }
         - { path : ^/api/doc, roles : PUBLIC_ACCESS }
         - { path : ^/api, roles : ROLE_USER }
         - { path : ^/api/avis, roles : PUBLIC_ACCESS }
+        - { path : ^/api/register, roles : ROLE_ADMIN }
 
 
 when@test:

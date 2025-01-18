@@ -4,6 +4,15 @@ nelmio_api_doc:
             title: Zoo Arcadia
             description: Ceci est un site pour un zoo.
             version: 1.0.0
+        components :
+            securitySchemes :
+                X-AUTH-TOKEN:
+                    type : apiKey
+                    name: X-AUTH-TOKEN
+                    in: header
+        security:
+            - X-AUTH-TOKEN: [ ]
+
     areas: # to filter documented areas
         path_patterns:
             - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
