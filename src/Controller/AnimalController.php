@@ -129,7 +129,7 @@ class AnimalController extends AbstractController
     )]
     public function show(int $id): JsonResponse
     {
-        $animal = $this->repository->find($id);
+        $animal = $this->repository->findOneBy(['id' => $id]);
         if ($animal === null) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
         }

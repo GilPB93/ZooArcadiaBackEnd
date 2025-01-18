@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Animal;
 use App\Entity\User;
 use App\Repository\RapportEmpRepository;
 use App\Entity\RapportEmp;
@@ -68,35 +67,19 @@ class RapportEmpController extends AbstractController
     )]
     public function new(Request $request, #[CurrentUser] ?User $user): JsonResponse
     {
-        if (!$user) {
-            return $this->json(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $data = json_decode($request->getContent(), true);
-        if (empty($data['alimentationDonnee']) || empty($data['quantiteDonnee']) || empty($data['animalId'])) {
-            return $this->json(['error' => 'Veuillez remplir tous les champs'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $animal = $this->manager->getRepository(Animal::class)->find($data['animalId']);
-        if (!$animal) {
-            return $this->json(['error' => 'Animal not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        $rapportEmp = (new RapportEmp())
-            ->setAlimentationDonnee($data['alimentationDonnee'])
-            ->setQuantiteDonnee($data['quantiteDonnee'])
-            ->setCreatedAt(new \DateTimeImmutable())
-            ->setCreatedBy($user)
-            ->setAnimal($animal);
+        $rapportEmp = $this->serializer->deserialize($request->getContent(), RapportEmp::class, 'json');
+        $rapportEmp->setCreatedBy($user);
+        $rapportEmp->setCreatedAt(new \DateTimeImmutable());
 
         $this->manager->persist($rapportEmp);
         $this->manager->flush();
 
-        return $this->json(
-            $rapportEmp,
+        return new JsonResponse(
+            $this->serializer->serialize($rapportEmp, 'json'),
             Response::HTTP_CREATED,
-            ['location' => $this->urlGenerator->generate('app_api_rapportEmp_read', ['id' => $rapportEmp->getId()])],
+            ['Location' => $this->urlGenerator->generate('app_api_rapportEmp_read', ['id' => $rapportEmp->getId()])]
         );
+
     }
 
 
