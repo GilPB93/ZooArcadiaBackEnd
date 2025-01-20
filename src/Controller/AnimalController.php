@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Animal;
+use App\Entity\Habitat;
+use App\Entity\RaceAnimal;
 use App\Repository\AnimalRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
@@ -28,7 +30,7 @@ class AnimalController extends AbstractController
 
     //CREATE ANIMAL - POST
     #[Route(name: 'new', methods: ['POST'])]
-    #[isGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_ADMIN')]
     #[OA\Post(
         path: '/api/animal',
         summary: 'Create a new animal',
@@ -41,9 +43,21 @@ class AnimalController extends AbstractController
                     new OA\Property(property: 'imgAnimal', type: 'string', example: "Image de l'animal"),
                     new OA\Property(property: 'curiositesAnimal', type: 'string', example: "Curiosités de l'animal"),
                     new OA\Property(property: 'descriptionAnimal', type: 'string', example: "Description de l'animal"),
-                    new OA\Property(property: 'raceAnimal', type: 'object', example: "Race de l'animal"),
-                    new OA\Property(property: 'habitat', type: 'object', example: "Habitat d'affectation de l'animal")
-                ]
+                    new OA\Property(property: 'raceAnimal', type: 'array',
+                        items: new OA\Items(
+                            properties: [
+                                new OA\Property(property: 'raceLabel', type: 'string', example: "Race Test")
+                            ],
+                            type: 'object'
+                        )
+                    ),
+                    new OA\Property(property: 'habitat', properties: [
+                        new OA\Property(property: 'habitatName', type: 'string', example: "Nom de l'habitat test")
+                    ],
+                        type: 'object'
+                    )
+                ],
+                type: 'object'
             )
         ),
         tags: ['Animal'],
@@ -58,36 +72,90 @@ class AnimalController extends AbstractController
                         new OA\Property(property: 'imgAnimal', type: 'string', example: "Image de l'animal"),
                         new OA\Property(property: 'curiositesAnimal', type: 'string', example: "Curiosités de l'animal"),
                         new OA\Property(property: 'descriptionAnimal', type: 'string', example: "Description de l'animal"),
-                        new OA\Property(property: 'raceAnimal', type: 'object', example: "Race de l'animal"),
-                        new OA\Property(property: 'habitat', type: 'object', example: "Habitat d'affectation de l'animal")
-                    ],
-                    type: 'object'
-                )
-            ),
-            new OA\Response(
-                response: '400',
-                description: 'Invalid data',
-                content: new OA\JsonContent(
-                    properties: [
-                        new OA\Property(property: 'message', type: 'string', example: "Invalid data")
+                        new OA\Property(property: 'raceAnimal', type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'raceLabel', type: 'string', example: "Race Test")
+                                ],
+                                type: 'object'
+                            )
+                        ),
+                        new OA\Property(property: 'habitat', properties: [
+                            new OA\Property(property: 'id', type: 'integer', example: 1),
+                            new OA\Property(property: 'habitatName', type: 'string', example: "Nom de l'habitat test")
+                        ],
+                            type: 'object'
+                        )
                     ],
                     type: 'object'
                 )
             )
         ]
     )]
-    public function create(Request $request): JsonResponse
+    public function new(Request $request): JsonResponse
     {
-        $animal = $this->serializer->deserialize($request->getContent(), Animal::class, 'json');
+        $data = json_decode($request->getContent(), true);
+
+        // Vérification de la raceAnimal
+        if (isset($data['raceAnimal']) && is_array($data['raceAnimal'])) {
+            foreach ($data['raceAnimal'] as $race) {
+                if (!isset($race['raceLabel'])) {
+                    return new JsonResponse(['error' => 'raceLabel manquant dans raceAnimal'], 400);
+                }
+
+                // Recherche de la race par raceLabel (vous pouvez ajuster selon vos besoins)
+                $existingRace = $this->manager->getRepository(RaceAnimal::class)->findOneBy(['raceLabel' => $race['raceLabel']]);
+                if (!$existingRace) {
+                    return new JsonResponse(['error' => 'Race non trouvée'], 400);
+                }
+            }
+        }
+
+        // Vérification de l'habitat
+        if (isset($data['habitat']) && is_array($data['habitat']) && count($data['habitat']) === 1) {
+            $habitatData = $data['habitat'];  // On prend le premier habitat
+            if (!isset($habitatData['habitatName'])) {
+                return new JsonResponse(['error' => 'habitatName manquant dans habitat'], 400);
+            }
+
+            // Recherche de l'habitat par habitatName
+            $existingHabitat = $this->manager->getRepository(Habitat::class)->findOneBy(['habitatName' => $habitatData['habitatName']]);
+            if (!$existingHabitat) {
+                return new JsonResponse(['error' => 'Habitat non trouvé'], 400);
+            }
+        } else {
+            return new JsonResponse(['error' => 'Données habitat invalides'], 400);
+        }
+
+        // Créer un nouvel animal
+        $animal = new Animal();
+        $this->serializer->deserialize($request->getContent(), Animal::class, 'json', ['object_to_populate' => $animal]);
+
+        // Associer la race et l'habitat à l'animal
+        if (isset($data['raceAnimal']) && is_array($data['raceAnimal']) && count($data['raceAnimal']) > 0) {
+            $race = $this->manager->getRepository(RaceAnimal::class)->findOneBy(['raceLabel' => $data['raceAnimal'][0]['raceLabel']]);
+            if (!$race) {
+                return new JsonResponse(['error' => 'Race non trouvée'], 400);
+            }
+            $animal->setRaceAnimal($race);
+        }
+
+        // Association de l'habitat à l'animal
+        if (isset($existingHabitat)) {
+            $animal->setHabitat($existingHabitat);
+        }
+
+        // Persist et flush l'entité animal
         $this->manager->persist($animal);
         $this->manager->flush();
 
-        return new JsonResponse(
-            $this->serializer->serialize($animal, 'json'),
-            Response::HTTP_CREATED,
-            ['location' => $this->urlGenerator->generate('app_api_animal_show', ['id' => $animal->getId()])],
-        );
+        return new JsonResponse($this->serializer->serialize($animal, 'json', ['groups' => ['animal:read']]), Response::HTTP_CREATED, [], true);
     }
+
+
+
+
 
     //READ ANIMAL - GET
     #[Route('/{id}' ,name: 'show', methods: ['GET'])]
@@ -115,8 +183,8 @@ class AnimalController extends AbstractController
                         new OA\Property(property: 'imgAnimal', type: 'string', example: "Image de l'animal"),
                         new OA\Property(property: 'curiositesAnimal', type: 'string', example: "Curiosités de l'animal"),
                         new OA\Property(property: 'descriptionAnimal', type: 'string', example: "Description de l'animal"),
-                        new OA\Property(property: 'raceAnimal', type: 'object', example: "Race de l'animal"),
-                        new OA\Property(property: 'habitat', type: 'object', example: "Habitat d'affectation de l'animal")
+                        new OA\Property(property: 'raceAnimal', type: 'array', items: new OA\Items(type: 'object', example: ["id" => 1, "raceLabel" => "Race animal Test"])),
+                        new OA\Property(property: 'habitat', type: 'array', items: new OA\Items(type: 'object', example: ["id" => 1, "habitatName" => "Savanna"]))
                     ],
                     type: 'object'
                 )

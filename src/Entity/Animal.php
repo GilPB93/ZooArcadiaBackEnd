@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: AnimalRepository::class)]
 class Animal
@@ -28,12 +29,16 @@ class Animal
     #[ORM\Column(type: Types::TEXT)]
     private ?string $descriptionAnimal = null;
 
-    #[ORM\OneToOne(inversedBy: 'animal', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?RaceAnimal $raceAnimal = null;
+    #[ORM\Column(type: 'integer')]
+    private int $views = 0;
 
     #[ORM\OneToOne(inversedBy: 'animal', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?RaceAnimal $raceAnimal = null;
+
+    #[ORM\ManyToOne(targetEntity: Habitat::class, inversedBy: 'animals')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['animal:read'])]
     private ?Habitat $habitat = null;
 
     /**
@@ -52,6 +57,14 @@ class Animal
     {
         $this->rapportVet = new ArrayCollection();
         $this->rapportEmp = new ArrayCollection();
+        $this->views = 0;
+        $this->id = null;
+        $this->prenomAnimal = null;
+        $this->imgAnimal = null;
+        $this->curiositesAnimal = null;
+        $this->descriptionAnimal = null;
+        $this->raceAnimal = null;
+        $this->habitat = null;
     }
 
     public function getId(): ?int
@@ -107,12 +120,23 @@ class Animal
         return $this;
     }
 
+    public function getViews(): int
+    {
+        return $this->views;
+    }
+
+    public function incrementViews(): self
+    {
+        $this->views++;
+        return $this;
+    }
+
     public function getRaceAnimal(): ?RaceAnimal
     {
         return $this->raceAnimal;
     }
 
-    public function setRaceAnimal(RaceAnimal $raceAnimal): static
+    public function setRaceAnimal(?RaceAnimal $raceAnimal): static
     {
         $this->raceAnimal = $raceAnimal;
 

@@ -3,8 +3,11 @@
 namespace App\Entity;
 
 use App\Repository\HabitatRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: HabitatRepository::class)]
 class Habitat
@@ -23,8 +26,14 @@ class Habitat
     #[ORM\Column(length: 255)]
     private ?string $habitatImg = null;
 
-    #[ORM\OneToOne(mappedBy: 'habitat', cascade: ['persist', 'remove'])]
-    private ?Animal $animal = null;
+    #[ORM\OneToMany(targetEntity: Animal::class, mappedBy: 'habitat')]
+    #[Groups(['habitat:read'])]
+    private Collection $animals;
+
+    public function __construct()
+    {
+        $this->animals = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -67,19 +76,35 @@ class Habitat
         return $this;
     }
 
-    public function getAnimal(): ?Animal
+    /**
+     * @return Collection<int, Animal>
+     */
+    public function getAnimals(): Collection
     {
-        return $this->animal;
+        return $this->animals;
     }
 
-    public function setAnimal(Animal $animal): static
+    public function addAnimal(Animal $animal): static
     {
-        // set the owning side of the relation if necessary
-        if ($animal->getHabitat() !== $this) {
-            $animal->setHabitat($this);
+        if (!$this->animals->contains($animal)) {
+            $this->animals->add($animal);
+            // Si l'animal n'a pas déjà cet habitat, on lui affecte
+            if ($animal->getHabitat() !== $this) {
+                $animal->setHabitat($this);
+            }
         }
 
-        $this->animal = $animal;
+        return $this;
+    }
+
+    public function removeAnimal(Animal $animal): static
+    {
+        if ($this->animals->removeElement($animal)) {
+            // On réinitialise l'habitat de l'animal à null
+            if ($animal->getHabitat() === $this) {
+                $animal->setHabitat(null);
+            }
+        }
 
         return $this;
     }

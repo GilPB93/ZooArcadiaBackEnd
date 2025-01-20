@@ -46,7 +46,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->apiToken = bin2hex(random_bytes(20));
     }
 
-
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 

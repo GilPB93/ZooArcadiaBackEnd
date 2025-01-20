@@ -61,7 +61,12 @@ class RaceAnimalController extends AbstractController
     )]
     public function new(Request $request): JsonResponse
     {
+        try {
         $raceAnimal = $this->serializer->deserialize($request->getContent(), RaceAnimal::class, 'json');
+
+        if (!$raceAnimal->getRaceLabel()) {
+            throw new \Exception('The raceLabel field is required.');
+        }
 
         $this->manager->persist($raceAnimal);
         $this->manager->flush();
@@ -69,8 +74,16 @@ class RaceAnimalController extends AbstractController
         return new JsonResponse(
             $this->serializer->serialize($raceAnimal, 'json'),
             Response::HTTP_CREATED,
-            ['Location' => $this->urlGenerator->generate('app_api_raceAnimal_show', ['id' => $raceAnimal->getId()])]
+            ['Location' => $this->urlGenerator->generate('app_api_raceAnimal_show', ['id' => $raceAnimal->getId()])],
+            true
         );
+        }
+        catch (\Exception $e) {
+            return new JsonResponse(
+                ['message' => 'Invalid data: ' . $e->getMessage()],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
     }
 
 
