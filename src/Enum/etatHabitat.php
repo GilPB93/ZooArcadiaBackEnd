@@ -4,8 +4,8 @@ namespace App\Enum;
 
 enum etatHabitat: string
 {
-    case tres_bon_etat = 'Très bon état';
-    case bon_etat = 'Bon état';
-    case etat_moyen = 'Etat moyen';
-    case mauvais_etat = 'Mauvais état';
+    case TRES_BON_ETAT = 'Très bon état';
+    case BON_ETAT = 'Bon état';
+    case ETAT_MOYEN = 'Etat moyen';
+    case MAUVAIS_ETAT = 'Mauvais état';
 }
