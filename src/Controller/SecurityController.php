@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
@@ -70,6 +71,22 @@ class SecurityController extends AbstractController
     public function register(Request $request): JsonResponse
     {
         $user = $this->serializer->deserialize($request->getContent(), User::class, 'json');
+        $roles = $user->getRoles();
+
+        if (in_array('ROLE_ADMIN', $roles)) {
+            $existingAdmin = $this->manager->getRepository(User::class)->findOneBy(['roles' => ['ROLE_ADMIN']]);
+            if ($existingAdmin) {
+                throw new BadRequestHttpException('An admin user already exists.');
+            }
+        }
+
+        $validRoles = ['ROLE_VETERINAIRE', 'ROLE_EMPLOYE'];
+        foreach ($roles as $role) {
+            if (!in_array($role, $validRoles)) {
+                throw new BadRequestHttpException('Invalid role: ' . $role);
+            }
+        }
+
         $user->setPassword($this->passwordHasher->hashPassword($user, $user->getPassword()));
         $user->setCreatedAt(new \DateTimeImmutable());
 

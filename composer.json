@@ -84,5 +84,8 @@
             "require": "7.2.*",
             "docker": false
         }
+    },
+    "require-dev": {
+        "doctrine/doctrine-fixtures-bundle": "^4.0"
     }
 }
