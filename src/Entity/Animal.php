@@ -148,7 +148,7 @@ class Animal
         return $this->habitat;
     }
 
-    public function setHabitat(Habitat $habitat): static
+    public function setHabitat(?Habitat $habitat): self
     {
         $this->habitat = $habitat;
 

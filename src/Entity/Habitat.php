@@ -84,7 +84,7 @@ class Habitat
         return $this->animals;
     }
 
-    public function addAnimal(Animal $animal): static
+    public function addAnimal(Animal $animal): self
     {
         if (!$this->animals->contains($animal)) {
             $this->animals->add($animal);
@@ -97,15 +97,16 @@ class Habitat
         return $this;
     }
 
-    public function removeAnimal(Animal $animal): static
+    public function removeAnimal(Animal $animal): self
     {
         if ($this->animals->removeElement($animal)) {
-            // On réinitialise l'habitat de l'animal à null
+            // On réinitialise l'habitat de l'animal à null si l'animal a bien été retiré
             if ($animal->getHabitat() === $this) {
-                $animal->setHabitat(null);
+                $animal->setHabitat(null);  // Réinitialiser l'habitat
             }
         }
 
         return $this;
     }
+
 }
