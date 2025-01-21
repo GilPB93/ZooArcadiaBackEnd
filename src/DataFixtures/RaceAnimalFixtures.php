@@ -12,9 +12,9 @@ class RaceAnimalFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
-        for ($i = 0; $i <= 20; $i++) {
+        for ($i = 1; $i <= 20; $i++) {
             $raceAnimal = (new RaceAnimal())
-                ->setRaceLabel("Animal $i");
+                ->setRaceLabel("Race Animal $i");
 
             $manager->persist($raceAnimal);
             $this->addReference(self::RACEANIMAL_REFERENCE . $i, $raceAnimal);

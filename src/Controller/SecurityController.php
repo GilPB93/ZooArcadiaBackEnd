@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\AccountStatus;
 use App\Entity\User;
+use App\Security\Roles;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,17 +33,22 @@ class SecurityController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     #[OA\Post(
         path: '/api/register',
+        description: 'Create a new user account with roles and return the user details along with an API token.',
         summary: 'Register a new user',
         requestBody: new OA\RequestBody(
-            description: 'User data to register',
+            description: 'User data for registration',
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'prenomUser', type: 'string', example: 'Prenom'),
-                    new OA\Property(property: 'nomUser', type: 'string', example: 'Nom'),
+                    new OA\Property(property: 'prenomUser', type: 'string', example: 'Prenom Test'),
+                    new OA\Property(property: 'nomUser', type: 'string', example: 'Nom Test'),
                     new OA\Property(property: 'email', type: 'string', example: 'exemple@email.com'),
                     new OA\Property(property: 'password', type: 'string', example: 'Test@123'),
-                    new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string', example: 'ROLE_EMPLOYE')),
+                    new OA\Property(
+                        property: 'roles',
+                        description: 'List of roles assigned to the user. Valid roles are ROLE_ADMIN, ROLE_VETERINAIRE, and ROLE_USER.',
+                        type: 'array',
+                        items: new OA\Items(type: 'string', enum: ['ROLE_ADMIN', 'ROLE_VETERINAIRE', 'ROLE_USER'], example: [Roles::ROLE_USER])),
                 ],
                 type: 'object'
             )
@@ -60,29 +65,39 @@ class SecurityController extends AbstractController
                         new OA\Property(property: 'prenomUser', type: 'string', example: 'Prenom'),
                         new OA\Property(property: 'nomUser', type: 'string', example: 'Nom'),
                         new OA\Property(property: 'apiToken', type: 'string', example: '31a023e212f116124a36af14ea0c1c3806eb9378'),
-                        new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string', example: 'ROLE_EMPLOYE')),
+                        new OA\Property(property: 'roles', type: 'array', items: new OA\Items( type: 'string', example: [Roles::ROLE_USER])),
                         new OA\Property(property: 'createdAt', type: 'string', format: 'date-time', example: '2021-09-30T14:00:00.000000Z'),
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Bad Request. Possible reasons: invalid role or an admin user already exists.',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'error', type: 'string', example: 'Invalid role: ROLE_INVALID'),
                     ],
                     type: 'object'
                 )
             )
         ]
     )]
+
     public function register(Request $request): JsonResponse
     {
         $user = $this->serializer->deserialize($request->getContent(), User::class, 'json');
         $roles = $user->getRoles();
 
-        if (in_array('ROLE_ADMIN', $roles)) {
-            $existingAdmin = $this->manager->getRepository(User::class)->findOneBy(['roles' => ['ROLE_ADMIN']]);
+        if (in_array(Roles::ROLE_ADMIN, $roles)) {
+            $existingAdmin = $this->manager->getRepository(User::class)->findOneBy(['roles' => [Roles::ROLE_ADMIN]]);
             if ($existingAdmin) {
                 throw new BadRequestHttpException('An admin user already exists.');
             }
         }
 
-        $validRoles = ['ROLE_VETERINAIRE', 'ROLE_EMPLOYE'];
         foreach ($roles as $role) {
-            if (!in_array($role, $validRoles)) {
+            if (!Roles::isValidRole($role)) {
                 throw new BadRequestHttpException('Invalid role: ' . $role);
             }
         }
@@ -94,11 +109,13 @@ class SecurityController extends AbstractController
         $this->manager->flush();
 
         return new JsonResponse(
-            ['user' => $user->getUserIdentifier(),
+            [
+                'user' => $user->getUserIdentifier(),
                 'apiToken' => $user->getApiToken(),
                 'roles' => $user->getRoles(),
+            ],
             Response::HTTP_CREATED
-            ]);
+        );
     }
 
 
@@ -129,7 +146,7 @@ class SecurityController extends AbstractController
                         new OA\Property(property: 'prenomUser', type: 'string', example: 'Prenom'),
                         new OA\Property(property: 'nomUser', type: 'string', example: 'Nom'),
                         new OA\Property(property: 'apiToken', type: 'string', example: '31a023e212f116124a36af14ea0c1c3806eb9378'),
-                        new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string', example: 'ROLE_EMPLOYE'))
+                        new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string', example: [Roles::ROLE_USER]))
                     ],
                     type: 'object'
                 )

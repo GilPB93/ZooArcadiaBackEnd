@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\RapportEmpRepository;
 use App\Entity\RapportEmp;
+use App\Security\Roles;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -30,7 +31,7 @@ class RapportEmpController extends AbstractController
 
     //CREATE RAPPORTEMP - POST
     #[Route(name: 'new', methods: ['POST'])]
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted(Roles::ROLE_USER)]
     #[OA\Post(
         path: '/api/rapportEmp',
         summary: 'Create a new Rapport Employé',
@@ -57,8 +58,8 @@ class RapportEmpController extends AbstractController
                         new OA\Property(property: 'alimentationDonnee', type: 'string', example: 'foin, paille, granulés, ...'),
                         new OA\Property(property: 'quantiteDonnee', type: 'string', example: '2kg'),
                         new OA\Property(property: 'createdAt', type: 'string', format: 'date-time', example: '2021-10-01T12:00:00+02:00'),
-                        new OA\Property(property: 'createdBy', ref: 'User2', type: 'object'),
-                        new OA\Property(property: 'animal', type: 'object', ref: 'Animal')
+                        new OA\Property(property: 'createdBy', type: 'array', items: new OA\Items(type: 'string', example: 'NomUser')),
+                        new OA\Property(property: 'animal', type: 'array', items: new OA\Items(type: 'string',  example: 'Animal')),
                     ],
                     type: 'object'
                 )
@@ -86,7 +87,7 @@ class RapportEmpController extends AbstractController
 
     //READ RAPPORTEMP - GET
     #[Route('/{id}', name: 'read', methods: ['GET'])]
-    #[isGranted('ROLE_ADMIN, ROLE_VETERINAIRE')]
+    #[isGranted(Roles::ROLE_ADMIN, Roles::ROLE_VETERINAIRE)]
     #[OA\Get(
         path: '/api/rapportEmp/{id}',
         summary: 'Get a Rapport Employé by its ID',
@@ -110,8 +111,8 @@ class RapportEmpController extends AbstractController
                         new OA\Property(property: 'alimentationDonnee', type: 'string', example: 'foin, paille, granulés, ...'),
                         new OA\Property(property: 'quantiteDonnee', type: 'string', example: '2kg'),
                         new OA\Property(property: 'createdAt', type: 'string', format: 'date-time', example: '2021-10-01T12:00:00+02:00'),
-                        new OA\Property(property: 'createdBy', ref: 'User2', type: 'object'),
-                        new OA\Property(property: 'animal', type: 'object', ref: 'Animal')
+                        new OA\Property(property: 'createdBy', type: 'array', items: new OA\Items(type: 'string', example: 'NomUser')),
+                        new OA\Property(property: 'animal', type: 'array', items: new OA\Items(type: 'string',  example: 'Animal')),
                     ],
                     type: 'object'
                 )

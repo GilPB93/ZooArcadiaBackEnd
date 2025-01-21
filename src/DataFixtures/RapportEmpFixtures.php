@@ -5,38 +5,47 @@ namespace App\DataFixtures;
 use App\Entity\Animal;
 use App\Entity\RapportEmp;
 use App\Entity\User;
+use App\Security\Roles;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
-use Doctrine\Tests\Common\DataFixtures\TestFixtures\UserFixture;
 
 class RapportEmpFixtures extends Fixture implements DependentFixtureInterface
 {
-    public const RAPPORTEMP_REFERENCE = 'rapportEmp';
-
-    public function load(ObjectManager $manager): void
+    public function load(ObjectManager $manager) : void
     {
+        $animals = $manager->getRepository(Animal::class)->findAll();
+        $users = $manager->getRepository(User::class)
+            ->createQueryBuilder('u')
+            ->where('u.roles LIKE :role')
+            ->setParameter('role', '%"'.Roles::ROLE_USER.'"%')
+            ->getQuery()
+            ->getResult();
+
         for ($i = 0; $i < 10; $i++) {
-            $rapportEmp = (new RapportEmp())
-                ->setAlimentationDonnee("xx alimentation")
-                ->setQuantiteDonnee("xx quantité")
-                ->setCreatedAt(new \DateTimeImmutable())
-                ->setCreatedBy($this->getReference(User::class, UserFixtures::USER_REFERENCE.random_int(1, 20)))
-                ->setAnimal($this->getReference(Animal::class, AnimalFixtures::ANIMAL_REFERENCE.random_int(1, 10)));
+            $rapportEmp = new RapportEmp();
+
+            $animal = $animals[$i];
+            $rapportEmp->setAnimal($animal);
+
+            $user = $users[$i];
+            $rapportEmp->setCreatedBy($user);
+
+            $rapportEmp->setAlimentationDonnee("alimentation donnée test $i");
+            $rapportEmp->setQuantiteDonnee("quantité donnée $i");
+            $rapportEmp->setCreatedAt(new \DateTimeImmutable());
 
             $manager->persist($rapportEmp);
-            $this->addReference(self::RAPPORTEMP_REFERENCE, $rapportEmp);
-
         }
 
         $manager->flush();
     }
 
-    public function getDependencies(): array
+    public function getDependencies() : array
     {
         return [
-            UserFixtures::class,
             AnimalFixtures::class,
+            UserFixtures::class,
         ];
     }
 }

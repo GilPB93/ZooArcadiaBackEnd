@@ -10,7 +10,7 @@ class ZooContactFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        for ($i = 0; $i <= 10; $i++) {
+        for ($i = 1; $i <= 10; $i++) {
         $zooContact = (new ZooContact())
             ->setContactName("ExempleNom $i")
             ->setContactEmail("exemple.$i@email.com")

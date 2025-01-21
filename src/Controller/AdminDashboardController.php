@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Animal;
+use App\Security\Roles;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AdminDashboardController extends AbstractController
 {
     #[Route('/incrementViews/{animalId}', name: 'app_api_adminDashboard_incrementViews', methods: ['POST'])]
-    #[isGranted('ROLE_ADMIN')]
+    #[isGranted(Roles::ROLE_ADMIN)]
     #[OA\Post(
         path: '/api/adminDashboard/incrementViews/{animalId}',
         summary: 'Increment the views of an animal',

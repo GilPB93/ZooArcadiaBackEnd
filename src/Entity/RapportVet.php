@@ -27,7 +27,7 @@ class RapportVet
     #[ORM\Column(enumType: etatHabitat::class)]
     private ?etatHabitat $etatHabitat = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $commentHabitat = null;
 
     #[ORM\Column]

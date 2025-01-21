@@ -10,7 +10,7 @@ class ZooAvisFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 1; $i < 10; $i++) {
             $zooAvis = (new ZooAvis())
                 ->setAvisName("Nom $i")
                 ->setAvisEmail("exemple.$i@gmail.com")

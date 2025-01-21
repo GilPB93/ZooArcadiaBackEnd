@@ -3,7 +3,9 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use App\Security\Roles;
 use Doctrine\ORM\Mapping as ORM;
+use Random\RandomException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -68,7 +70,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
@@ -89,9 +90,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
-
+        $roles[] = Roles::ROLE_USER;
         return array_unique($roles);
     }
 
@@ -101,7 +100,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
-
         return $this;
     }
 
@@ -110,10 +108,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function addRole(string $role): static
     {
-        if (!in_array($role, $this->roles, true)) {
+        if (Roles::isValidRole($role) && !in_array($role, $this->roles, true)) {
             $this->roles[] = $role;
         }
-
         return $this;
     }
 
@@ -130,11 +127,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function removeRole(string $role): static
     {
-        $this->roles = array_filter(
-            $this->roles,
-            fn($existingRole) => $existingRole !== $role
-        );
-
+        if (Roles::isValidRole($role)) {
+            $this->roles = array_filter(
+                $this->roles,
+                fn($existingRole) => $existingRole !== $role
+            );
+        }
         return $this;
     }
 
@@ -149,7 +147,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
-
         return $this;
     }
 
@@ -170,7 +167,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setNomUser(string $nomUser): static
     {
         $this->nomUser = $nomUser;
-
         return $this;
     }
 
@@ -182,7 +178,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPrenomUser(string $prenomUser): static
     {
         $this->prenomUser = $prenomUser;
-
         return $this;
     }
 
@@ -194,7 +189,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setApiToken(string $apiToken): static
     {
         $this->apiToken = $apiToken;
-
         return $this;
     }
 
@@ -206,7 +200,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -221,9 +214,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($rapportEmp->getCreatedBy() !== $this) {
             $rapportEmp->setCreatedBy($this);
         }
-
         $this->rapportEmp = $rapportEmp;
-
         return $this;
     }
 
@@ -238,9 +229,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($rapportVet->getCreatedBy() !== $this) {
             $rapportVet->setCreatedBy($this);
         }
-
         $this->rapportVet = $rapportVet;
-
         return $this;
     }
 }

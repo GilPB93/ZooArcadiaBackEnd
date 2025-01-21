@@ -6,6 +6,7 @@ use App\Entity\Animal;
 use App\Entity\Habitat;
 use App\Entity\RaceAnimal;
 use App\Repository\AnimalRepository;
+use App\Security\Roles;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -30,7 +31,7 @@ class AnimalController extends AbstractController
 
     //CREATE ANIMAL - POST
     #[Route(name: 'new', methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted(Roles::ROLE_ADMIN)]
     #[OA\Post(
         path: '/api/animal',
         summary: 'Create a new animal',
