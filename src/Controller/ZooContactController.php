@@ -14,13 +14,13 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/api/contact', name: 'app_api_contact')]
+#[Route('/api/contact', name: 'app_api_contact_')]
 class ZooContactController extends AbstractController
 {
     /**
      * @throws TransportExceptionInterface
      */
-    #[Route('/send', name: 'app_api_contact_send', methods: ['POST'])]
+    #[Route('/send', name: 'send', methods: ['POST'])]
     #[OA\Post(
         path: '/api/contact/send',
         summary: 'Send contact information to the zoo.',

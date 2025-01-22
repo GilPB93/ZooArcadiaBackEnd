@@ -8,78 +8,70 @@ use PHPUnit\Framework\TestCase;
 
 class HabitatTest extends TestCase
 {
-    public function testSetAndGetHabitatName()
+    public function testGettersAndSetters()
     {
         $habitat = new Habitat();
-        $habitat->setHabitatName('Forêt tropicale');
 
-        $this->assertEquals('Forêt tropicale', $habitat->getHabitatName());
-    }
+        $habitat->setHabitatName('Jungle');
+        $this->assertSame('Jungle', $habitat->getHabitatName());
 
-    public function testSetAndGetHabitatDescription()
-    {
-        $habitat = new Habitat();
-        $description = 'Une forêt dense située près de l\'équateur';
-        $habitat->setHabitatDescription($description);
+        $habitat->setHabitatDescription('Une jungle tropicale avec beaucoup de végétation.');
+        $this->assertSame('Une jungle tropicale avec beaucoup de végétation.', $habitat->getHabitatDescription());
 
-        $this->assertEquals($description, $habitat->getHabitatDescription());
-    }
-
-    public function testSetAndGetHabitatImg()
-    {
-        $habitat = new Habitat();
-        $image = 'forêt_tropicale.jpg';
-        $habitat->setHabitatImg($image);
-
-        $this->assertEquals($image, $habitat->getHabitatImg());
+        $habitat->setHabitatImg('jungle.jpg');
+        $this->assertSame('jungle.jpg', $habitat->getHabitatImg());
     }
 
     public function testAddAnimal()
     {
         $habitat = new Habitat();
-        $animal = $this->createMock(Animal::class);
-
-        $animal->expects($this->once())
-            ->method('setHabitat')
-            ->with($habitat);
+        $animal = new Animal();
 
         $habitat->addAnimal($animal);
 
         $this->assertCount(1, $habitat->getAnimals());
+        $this->assertTrue($habitat->getAnimals()->contains($animal));
+
+        // Vérifier la relation inverse
+        $this->assertSame($habitat, $animal->getHabitat());
     }
 
     public function testRemoveAnimal()
     {
         $habitat = new Habitat();
-        $animal = $this->createMock(Animal::class);
-
-        $animal->method('getHabitat')
-            ->willReturn($habitat);
-
-        $animal->expects($this->once())
-            ->method('setHabitat')
-            ->with($habitat);
+        $animal = new Animal();
 
         $habitat->addAnimal($animal);
-
-        $animal->expects($this->once())
-            ->method('setHabitat')
-            ->with($this->logicalOr($this->equalTo(null), $this->isInstanceOf(Habitat::class)));
+        $this->assertCount(1, $habitat->getAnimals());
 
         $habitat->removeAnimal($animal);
 
         $this->assertCount(0, $habitat->getAnimals());
+        $this->assertFalse($habitat->getAnimals()->contains($animal));
+
+        // Vérifier la relation inverse
+        $this->assertNull($animal->getHabitat());
     }
 
-    public function testGetAnimals()
+    public function testAddAnimalOnlyOnce()
     {
         $habitat = new Habitat();
-        $animal = $this->createMock(Animal::class);
+        $animal = new Animal();
 
         $habitat->addAnimal($animal);
+        $habitat->addAnimal($animal);
 
-        $animals = $habitat->getAnimals();
-        $this->assertInstanceOf(\Doctrine\Common\Collections\Collection::class, $animals);
-        $this->assertCount(1, $animals);
+        $this->assertCount(1, $habitat->getAnimals());
+    }
+
+    public function testRemoveAnimalNotPresent()
+    {
+        $habitat = new Habitat();
+        $animal = new Animal();
+
+        // Essayer de retirer un animal qui n'est pas dans la collection
+        $habitat->removeAnimal($animal);
+
+        $this->assertCount(0, $habitat->getAnimals());
     }
 }
